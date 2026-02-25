@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <title>Typing Trainer</title>
+
+  <style>
+/* ================= METRICS ================= */
+.metrics {
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 14px;
+  background: #fff;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-width: 650px;
+}
+
+.line { margin-bottom: 10px; }
+.title { font-weight: bold; margin-right: 5px; color: #333; }
+.data { color: #555; }
+
+.keys {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-left: 2px;
+}
+
+/* All keys ছোট বক্স */
+.metrics .keys .key {
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+  font-size: 10px;
+  padding: 0;
+  border-radius: 0px;
+  text-align: center;
+  font-weight: bold;
+  background: #ebd5d5;
+  color: #000;
+}
+
+/* Current key আলাদা বক্স */
+.current-key-box {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: bold;
+  background: #99b16b;
+  color: #fff;
+  border-radius: 3px;
+  margin-right: 5px;
+}
+
+/* ================= WORD SECTION ================= */
+.words {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 30px;
+  margin: 10px;
+  text-align: center;
+  max-width: 632px;
+}
+
+.word {
+  font-size: 20px;
+  font-weight: bold;
+  color: #000000;
+  margin: 20px;
+}
+
+.word span.correct { color: green; }
+.word span.incorrect { color: red; }
+.word span.current { text-decoration: underline; }
+
+/* ================= KEYBOARD ================= */
+body {
+  font-family: sans-serif;
+  background: #f0f0f0;
+  padding: 20px;
+}
+
+.keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.row {
+  display: flex;
+  gap: 1px;
+}
+
+.key {
+  width: 44px;
+  height: 38px;
+  background: #dcdcdc;
+  border: 1px solid #999;
+  text-align: center;
+  line-height: 18px;
+  font-size: 14px;
+  padding-top: 5px;
+  border-radius: 3px;
+}
+
+.key.wide { background: #c0c0c0; }
+
+/* বিশেষ কী width */
+.backspace { width: 90px; }
+.tab { width: 68px; }
+.caps { width: 88px; }
+.shift { width: 115px; }
+.rshift { width: 115px; }
+.ctrl { width: 94px; }
+.alt { width: 88px; }
+.enter { width: 94px; }
+.space { width: 328px; }
+.backslash { width: 66px; }
+
+/* আঙুল অনুযায়ী রঙ বসানো */
+.backspace,.tab,.caps,.shift,.rshift,.ctrl,.alt,.enter,
+.one,.q,.a,.z,.zero,.minus,.equal,.p,.bracketleft,.bracketright,
+.backslash,.semicolon,.quote,.comma,.slash { background:#8ec07c; }
+
+.two,.w,.s,.x,.nine,.o,.l,.dot { background:#b8bb26; }
+.three,.e,.d,.c,.eight,.i,.k,.comma { background:#fabd2f; }
+.six,.seven,.y,.u,.h,.j,.n,.m { background:#d3869b; }
+.four,.five,.r,.t,.f,.g,.v,.b { background:#83a698; }
+.space { background:#d66354; }
+
+/* কী হাইলাইট */
+.key.active {
+  background:#282640 !important;
+  color:#fff !important;
+}
+  </style>
+</head>
+
+<body>
+
+<!-- ================= METRICS ================= -->
+<div class="metrics">
+  <div class="line">
+    <span class="title">Metrics:</span>
+    <span class="data">
+      Speed: <span id="wpm">0</span>wpm (<span id="wpmDelta">0</span>)
+      Accuracy: <span id="accuracy">0</span>% (<span id="accuracyDelta">0</span>)
+      Score: <span id="score">0</span> (<span id="scoreDelta">0</span>)
+    </span>
+  </div>
+
+  <div class="line">
+    <span class="title">All keys:</span>
+    <div class="keys" id="allKeys">
+      <span class="key">E</span><span class="key">N</span><span class="key">I</span>
+      <span class="key">A</span><span class="key">R</span><span class="key">L</span>
+      <span class="key">T</span><span class="key">O</span><span class="key">S</span>
+      <span class="key">U</span><span class="key">D</span><span class="key">Y</span>
+      <span class="key">C</span><span class="key">G</span><span class="key">H</span>
+      <span class="key">P</span><span class="key">M</span><span class="key">K</span>
+      <span class="key">B</span><span class="key">W</span><span class="key">F</span>
+      <span class="key">Z</span><span class="key">V</span><span class="key">X</span>
+      <span class="key">Q</span><span class="key">J</span>
+    </div>
+  </div>
+
+  <div class="line">
+    <span class="title">Current key:</span>
+    <span class="data">
+      <span id="currentKey" class="current-key-box">-</span>
+      Last speed: <span id="lastSpeed">0wpm</span>
+      Top speed: <span id="topSpeed">0wpm</span>
+      Learning rate: <span id="learningRate">Uncertain</span>
+      Accuracy streaks: <span id="streaks">No accuracy streaks.</span>
+    </span>
+  </div>
+
+  <div class="line">
+    <span class="title">Daily goal:</span>
+    <span class="data" id="dailyGoal">0% / 30 minutes</span>
+  </div>
+</div>
+
+<div class="words">
+  <p class="word"></p>
+</div>
+
+<!-- ================= KEYBOARD ================= -->
+<div class="keyboard">
+
+<div class="row">
+<div class="key one">~<br>`</div>
+<div class="key one">!<br>1</div>
+<div class="key two">@<br>2</div>
+<div class="key three">#<br>3</div>
+<div class="key four">$<br>4</div>
+<div class="key five">%<br>5</div>
+<div class="key six">^<br>6</div>
+<div class="key seven">&<br>7</div>
+<div class="key eight">*<br>8</div>
+<div class="key nine">(<br>9</div>
+<div class="key zero">)<br>0</div>
+<div class="key minus">_<br>-</div>
+<div class="key equal">+<br>=</div>
+<div class="key wide backspace">Backspace</div>
+</div>
+
+<div class="row">
+<div class="key tab">Tab</div>
+<div class="key q">Q</div><div class="key w">W</div><div class="key e">E</div>
+<div class="key r">R</div><div class="key t">T</div><div class="key y">Y</div>
+<div class="key u">U</div><div class="key i">I</div><div class="key o">O</div>
+<div class="key p">P</div>
+<div class="key bracketleft">{<br>[</div>
+<div class="key bracketright">}<br>]</div>
+<div class="key backslash">|<br>\</div>
+</div>
+
+<div class="row">
+<div class="key caps">Caps</div>
+<div class="key a">A</div><div class="key s">S</div><div class="key d">D</div>
+<div class="key f">F</div><div class="key g">G</div><div class="key h">H</div>
+<div class="key j">J</div><div class="key k">K</div><div class="key l">L</div>
+<div class="key semicolon">:<br>;</div>
+<div class="key quote">"<br>'</div>
+<div class="key enter">Enter</div>
+</div>
+
+<div class="row">
+<div class="key shift">Shift</div>
+<div class="key z">Z</div><div class="key x">X</div><div class="key c">C</div>
+<div class="key v">V</div><div class="key b">B</div><div class="key n">N</div>
+<div class="key m">M</div>
+<div class="key comma"><<br>,</div>
+<div class="key dot">><br>.</div>
+<div class="key slash">?<br>/</div>
+<div class="key rshift">Shift</div>
+</div>
+
+<div class="row">
+<div class="key ctrl">Ctrl</div>
+<div class="key alt">Alt</div>
+<div class="key space">Space</div>
+<div class="key alt">Alt</div>
+<div class="key ctrl">Ctrl</div>
+</div>
+
+</div>
+
+<script>
+
+// ================= KEYBOARD INTERACTION =================
+document.querySelectorAll('.key').forEach(key => {
+  key.addEventListener('mousedown', () => key.classList.add('active'));
+  key.addEventListener('mouseup', () => key.classList.remove('active'));
+  key.addEventListener('mouseleave', () => key.classList.remove('active'));
+});
+
+// ================= WORD SECTION =================
+let position = 0;
+let weakKeys = JSON.parse(localStorage.getItem("weakKeys") || "{}");
+let correct = 0, total = 0, streak = 0;
+let startTime = Date.now();
+let lastWPM = 0, lastAccuracy = 0, lastScore = 0;
+let topSpeed = 0;
+let dailySeconds = 0;
+
+const wordElement = document.querySelector('.word');
+const currentKeyEl = document.getElementById("currentKey");
+
+const wpmEl = document.getElementById("wpm");
+const wpmDeltaEl = document.getElementById("wpmDelta");
+const accuracyEl = document.getElementById("accuracy");
+const accuracyDeltaEl = document.getElementById("accuracyDelta");
+const scoreEl = document.getElementById("score");
+const scoreDeltaEl = document.getElementById("scoreDelta");
+const lastSpeedEl = document.getElementById("lastSpeed");
+const topSpeedEl = document.getElementById("topSpeed");
+const learningRateEl = document.getElementById("learningRate");
+const streaksEl = document.getElementById("streaks");
+const dailyGoalEl = document.getElementById("dailyGoal");
+
+// SERIAL UNLOCK SYSTEM
+const serialOrder = ["E","N","I","A","R","L","T","O","S","U","D","Y","C","G","H","P","M","K","B","W","F","Z","V","X","Q","J"];
+let unlockedLetters = JSON.parse(localStorage.getItem("unlockedLetters") || '["E","N","I","A","R","L"]');
+let nextUnlockIndex = unlockedLetters.length;
+
+function checkPerformanceAndUnlock(accuracy, streak){
+  if(accuracy > 85 && streak >= 10 && nextUnlockIndex < serialOrder.length){
+    unlockedLetters.push(serialOrder[nextUnlockIndex]);
+    localStorage.setItem("unlockedLetters", JSON.stringify(unlockedLetters));
+    nextUnlockIndex++;
+  }
+}
+
+// WORD GENERATOR
+function generateWord(){
+  const weakKeysData = JSON.parse(localStorage.getItem("weakKeys") || "{}");
+  const letters = unlockedLetters;
+
+  const vowels = letters.filter(c => ["A","E","I","O","U"].includes(c));
+  const consonants = letters.filter(c => !["A","E","I","O","U"].includes(c));
+
+  function weightedChoice(charList){
+    const weights = charList.map(c => (weakKeysData[c] || 1));
+    const total = weights.reduce((a,b)=>a+b,0);
+    let r = Math.random()*total;
+    for(let i=0;i<charList.length;i++){
+      if(r < weights[i]) return charList[i];
+      r -= weights[i];
+    }
+    return charList[0];
+  }
+
+  const patterns = ["CVCVC","VCVCV"];
+  const pattern = patterns[Math.floor(Math.random()*patterns.length)];
+
+  let word = "";
+  for(let p of pattern){
+    if(p === "C") word += weightedChoice(consonants);
+    else word += weightedChoice(vowels);
+  }
+  return word.toLowerCase();
+}
+
+// SHOW WORDS
+function showWords(count = 24) {
+  wordElement.innerHTML = "";
+  let wordsArray = JSON.parse(localStorage.getItem("targetWords") || "[]");
+
+  if(wordsArray.length === 0){
+    for (let i = 0; i < count; i++) {
+      wordsArray.push(generateWord());
+    }
+  } else {
+    while(wordsArray.length < count){
+      wordsArray.push(generateWord());
+    }
+    if(wordsArray.length > count){
+      wordsArray = wordsArray.slice(0,count);
+    }
+  }
+
+  localStorage.setItem("targetWords", JSON.stringify(wordsArray));
+
+  const text = wordsArray.join(" ");
+  text.split("").forEach((letter, i) => {
+    const span = document.createElement("span");
+    span.textContent = letter;
+    wordElement.appendChild(span);
+  });
+  position = 0;
+  setCurrentUnderline(position);
+  currentKeyEl.textContent = text[0].toUpperCase();
+}
+
+function setCurrentUnderline(pos) {
+  [...wordElement.children].forEach((span, i) => {
+    span.classList.remove("current");
+    if (i === pos) span.classList.add("current");
+  });
+}
+
+showWords(10);
+
+// TYPING LOGIC
+document.addEventListener("keydown", (e) => {
+  const currentText = [...wordElement.children].map(span => span.textContent).join("");
+
+  if (e.key.length === 1 && position < currentText.length) {
+    const span = wordElement.children[position];
+    total++;
+
+    if (e.key.toLowerCase() === currentText[position]) {
+      if (!span.classList.contains("incorrect")) {
+        span.classList.add("correct");
+        correct++;
+        streak++;
+      }
+      position++;
+      setCurrentUnderline(position);
+    } else {
+      span.classList.remove("correct");
+      span.classList.add("incorrect");
+      streak = 0;
+
+      weakKeys[currentText[position]] = (weakKeys[currentText[position]] || 0) + 1;
+      localStorage.setItem("weakKeys", JSON.stringify(weakKeys));
+
+      setCurrentUnderline(position);
+      return;
+    }
+  }
+
+  if (position === currentText.length) {
+    finishRound(currentText);
+    showWords(10);
+  }
+
+  highlightKey(e.key);
+});
+
+// FINISH ROUND
+function finishRound(currentWord){
+  const elapsedMinutes = (Date.now() - startTime)/60000;
+  const wpm = (correct/5)/elapsedMinutes;
+  const accuracy = (correct/total)*100;
+  const score = correct*10 + streak*2;
+
+  const wpmDelta = (wpm - lastWPM).toFixed(1);
+  const accuracyDelta = (accuracy - lastAccuracy).toFixed(2);
+  const scoreDelta = (score - lastScore);
+
+  wpmEl.innerText = wpm.toFixed(1);
+  wpmDeltaEl.innerText = wpmDelta > 0 ? "↑+"+wpmDelta : "↓"+wpmDelta;
+
+  accuracyEl.innerText = accuracy.toFixed(2);
+  accuracyDeltaEl.innerText = accuracyDelta > 0 ? "↑+"+accuracyDelta : "↓"+accuracyDelta;
+
+  scoreEl.innerText = score;
+  scoreDeltaEl.innerText = scoreDelta > 0 ? "↑+"+scoreDelta : "↓"+scoreDelta;
+
+  currentKeyEl.innerText = (currentWord[position-1] || "-").toUpperCase();
+
+  lastSpeedEl.innerText = wpm.toFixed(1)+"wpm";
+  if(wpm > topSpeed){
+    topSpeed = wpm;
+  }
+  topSpeedEl.innerText = topSpeed.toFixed(1)+"wpm";
+
+  learningRateEl.innerText = "Uncertain";
+  streaksEl.innerText = streak > 0 ? "Streak: "+streak : "No accuracy streaks.";
+
+  dailySeconds += (Date.now() - startTime)/1000;
+  const percent = Math.min((dailySeconds/1800)*100,100);
+  dailyGoalEl.innerText = Math.floor(percent)+"% / 30 minutes";
+
+  lastWPM = wpm;
+  lastAccuracy = accuracy;
+  lastScore = score;
+
+  correct = 0;
+  total = 0;
+  streak = 0;
+  startTime = Date.now();
+
+  checkPerformanceAndUnlock(lastAccuracy, streak);
+}
+
+// KEYBOARD HIGHLIGHT
+function highlightKey(k){
+  k = k.toLowerCase();
+  const keyEl = document.querySelector(".key."+k);
+  if(keyEl){
+    keyEl.classList.add("active");
+    setTimeout(()=>keyEl.classList.remove("active"),200);
+  }
+}
+
+</script>
+
+</body>
+</html>
