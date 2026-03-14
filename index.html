@@ -1,467 +1,612 @@
+
+
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <title>Typing Trainer</title>
-
-  <style>
-/* ================= METRICS ================= */
-.metrics {
-  font-family: "Segoe UI", Arial, sans-serif;
-  font-size: 14px;
-  background: #fff;
-  padding: 15px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  max-width: 650px;
+<meta charset="UTF-8">
+<title>Typing Trainer</title>
+<style>
+/* ---------------- GENERAL ---------------- */
+body{
+  font-family:"Segoe UI",Arial;
+  background:#eeeeee;
+  padding:40px;
+  color:#333;
+  margin:0;
+  display:flex;
+  justify-content:center;
 }
 
-.line { margin-bottom: 10px; }
-.title { font-weight: bold; margin-right: 5px; color: #333; }
-.data { color: #555; }
+/* ---------------- CONTAINER ---------------- */
+.container{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:20px;
+}
 
-.keys {
-  display: inline-flex;
+/* ---------------- METRICS ---------------- */
+.metrics, .words, .keyboard{
+  background:#fff;
+  border:1px solid #ccc;
+  border-radius:6px;
+  padding:20px;
+  width:800px; /* fixed width for all sections */
+  box-sizing:border-box;
+  text-align:left;
+  cursor:grab; /* draggable cursor */
+}
+
+/* metrics content */
+.label{
+  color:#6b6bb5;
+  font-weight:600;
+  margin-right:6px;
+}
+.green{ color:#2ecc71; margin-right:10px; }
+
+/* rows */
+.row{
+  display:flex;
+  align-items: center;
+  gap:2px;
+  font-size:16px;
+  margin-bottom:8px;
   flex-wrap: wrap;
-  gap: 2px;
-  margin-left: 2px;
 }
 
-/* All keys ছোট বক্স */
-.metrics .keys .key {
-  width: 14px;
-  height: 14px;
-  line-height: 14px;
-  font-size: 10px;
-  padding: 0;
-  border-radius: 0px;
-  text-align: center;
-  font-weight: bold;
-  background: #ebd5d5;
-  color: #000;
+/* keys row */
+.keys-row{
+  display:flex;
+  gap:1px;
+  align-items:center;
+  flex-wrap: nowrap;
+  justify-content:center;
 }
 
-/* Current key আলাদা বক্স */
-.current-key-box {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  line-height: 18px;
-  text-align: center;
-  font-size: 12px;
-  font-weight: bold;
-  background: #99b16b;
-  color: #fff;
-  border-radius: 3px;
-  margin-right: 5px;
+/* key box */
+.key{
+  width:18px;
+  height:18px;
+  border:1px solid #999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:600;
+  position:relative;
 }
 
-/* ================= WORD SECTION ================= */
-.words {
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 30px;
-  margin: 10px;
-  text-align: center;
-  max-width: 632px;
+/* learned / active / current / lock */
+.learn{ background:#b7d7a8; }
+.active{ background:#7ed37e; }
+.current{ background:#d6bf6a; border:2px solid #4455bb; }
+.lock{ background:#dcdcdc; color:#444; }
+.lock::after{
+  content:"";
+  position:absolute;
+  width:140%;
+  height:1px;
+  background:#999;
+  transform:rotate(45deg);
 }
 
-.word {
-  font-size: 20px;
-  font-weight: bold;
-  color: #000000;
-  margin: 20px;
+/* progress bar */
+.progress{
+  flex: 0 0 400px;
+  min-width: 200px;
+  height:8px;
+  background:#e0e0e0;
+  border-radius:6px;
+  overflow:hidden;
+}
+.bar{
+  width:3%;
+  height:100%;
+  background:#cfcfcf;
+  transition: width 0.0s;
 }
 
-.word span.correct { color: green; }
-.word span.incorrect { color: red; }
-.word span.current { text-decoration: underline; }
+/* ---------------- WORD SECTION ---------------- */
+.word{ font-size:26px; font-weight:bold; color:#000; margin:20px; }
+.word span.correct{ color:green; }
+.word span.incorrect{ color:red; }
+.word span.current{ text-decoration:underline; }
 
-/* ================= KEYBOARD ================= */
-body {
-  font-family: sans-serif;
-  background: #f0f0f0;
-  padding: 20px;
+/* ---------------- KEYBOARD ---------------- */
+.keyboard{
+  display:flex;
+  flex-direction:column;
+  gap:1px;
 }
-
-.keyboard {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+.rowkbd{ display:flex; gap:1px; justify-content:center; }
+.keykbd{
+  width:44px; height:38px;
+  background:#dcdcdc;
+  border:1px solid #999;
+  text-align:center;
+  line-height:18px;
+  font-size:14px;
+  padding-top:5px;
+  border-radius:2px;
 }
+.keykbd.backspace { width: 90px; }
+.keykbd.tab { width: 68px; }
+.keykbd.caps { width: 88px; }
+.keykbd.shift { width: 114px; }
+.keykbd.rshift { width: 114px; }
+.keykbd.ctrl { width: 93px; }
+.keykbd.alt { width: 88px; }
+.keykbd.enter { width: 93px; }
+.keykbd.space { width: 328px; }
+.keykbd.backslash { width: 66px; }
+.keykbd.pipe { width:66px; }
+.keykbd.active{ background:#282640 !important; color:#fff !important; }
 
-.row {
-  display: flex;
-  gap: 1px;
-}
-
-.key {
-  width: 44px;
-  height: 38px;
-  background: #dcdcdc;
-  border: 1px solid #999;
-  text-align: center;
-  line-height: 18px;
-  font-size: 14px;
-  padding-top: 5px;
-  border-radius: 3px;
-}
-
-.key.wide { background: #c0c0c0; }
-
-/* বিশেষ কী width */
-.backspace { width: 90px; }
-.tab { width: 68px; }
-.caps { width: 88px; }
-.shift { width: 115px; }
-.rshift { width: 115px; }
-.ctrl { width: 94px; }
-.alt { width: 88px; }
-.enter { width: 94px; }
-.space { width: 328px; }
-.backslash { width: 66px; }
-
-/* আঙুল অনুযায়ী রঙ বসানো */
+/* finger colors */
 .backspace,.tab,.caps,.shift,.rshift,.ctrl,.alt,.enter,
 .one,.q,.a,.z,.zero,.minus,.equal,.p,.bracketleft,.bracketright,
-.backslash,.semicolon,.quote,.comma,.slash { background:#8ec07c; }
-
+.backslash,.semicolon,.quote,.comma,.slash,
+.tilde,.exclam,.at,.hash,.dollar,.percent,.caret,.amp,.asterisk,.parenleft,.parenright,.underscore,.plus,.pipe { background:#8ec07c; }
 .two,.w,.s,.x,.nine,.o,.l,.dot { background:#b8bb26; }
 .three,.e,.d,.c,.eight,.i,.k,.comma { background:#fabd2f; }
 .six,.seven,.y,.u,.h,.j,.n,.m { background:#d3869b; }
 .four,.five,.r,.t,.f,.g,.v,.b { background:#83a698; }
 .space { background:#d66354; }
 
-/* কী হাইলাইট */
-.key.active {
-  background:#282640 !important;
-  color:#fff !important;
+/* ---------------- ZOOMABLE & DRAGGABLE ---------------- */
+.zoomable{
+  transition: transform 0.2s;
+  transform-origin: center center;
 }
-  </style>
+</style>
 </head>
-
 <body>
 
-<!-- ================= METRICS ================= -->
-<div class="metrics">
-  <div class="line">
-    <span class="title">Metrics:</span>
-    <span class="data">
-      Speed: <span id="wpm">0</span>wpm (<span id="wpmDelta">0</span>)
-      Accuracy: <span id="accuracy">0</span>% (<span id="accuracyDelta">0</span>)
-      Score: <span id="score">0</span> (<span id="scoreDelta">0</span>)
-    </span>
-  </div>
+<div class="container">
 
-  <div class="line">
-    <span class="title">All keys:</span>
-    <div class="keys" id="allKeys">
-      <span class="key">E</span><span class="key">N</span><span class="key">I</span>
-      <span class="key">A</span><span class="key">R</span><span class="key">L</span>
-      <span class="key">T</span><span class="key">O</span><span class="key">S</span>
-      <span class="key">U</span><span class="key">D</span><span class="key">Y</span>
-      <span class="key">C</span><span class="key">G</span><span class="key">H</span>
-      <span class="key">P</span><span class="key">M</span><span class="key">K</span>
-      <span class="key">B</span><span class="key">W</span><span class="key">F</span>
-      <span class="key">Z</span><span class="key">V</span><span class="key">X</span>
-      <span class="key">Q</span><span class="key">J</span>
+  <!-- METRICS -->
+  <div class="metrics zoomable">
+    <span class="label">Metrics:</span>
+    <span class="label">Speed:</span>
+    <span class="green" id="wpm">0wpm</span>
+    <span class="green" id="wpmDelta"></span>
+
+    <span class="label">Accuracy:</span>
+    <span class="green" id="accuracy">0%</span>
+    <span class="green" id="accuracyDelta"></span>
+
+    <span class="label">Score:</span>
+    <span class="green" id="score">0</span>
+    <span class="green" id="scoreDelta"></span>
+
+    <div class="row">
+      <span class="label">All keys:</span>
+      <div class="keys-row" id="allKeys"></div>
+    </div>
+
+    <div class="row">
+      <span class="label">Current key:</span>
+      <div class="key current" id="currentKey">-</div>
+
+      <span class="label">Last speed:</span>
+      <span id="lastSpeed">0wpm</span>
+
+      <span class="label">Top speed:</span>
+      <span id="topSpeed">0wpm</span>
+
+      <span class="label">Learning rate:</span>
+      <span id="learningRate">Uncertain</span>
+    </div>
+
+    <div class="row">
+      <span class="label">Accuracy:</span>
+      <span id="streaks">No accuracy streaks</span>
+    </div>
+
+    <div class="row">
+      <span class="label">Daily goal:</span>
+      <span id="dailyGoal">0% / 30 minutes</span>
+      <div class="progress">
+        <div class="bar" id="dailyGoalBar"></div>
+      </div>
     </div>
   </div>
 
-  <div class="line">
-    <span class="title">Current key:</span>
-    <span class="data">
-      <span id="currentKey" class="current-key-box">-</span>
-      Last speed: <span id="lastSpeed">0wpm</span>
-      Top speed: <span id="topSpeed">0wpm</span>
-      Learning rate: <span id="learningRate">Uncertain</span>
-      Accuracy streaks: <span id="streaks">No accuracy streaks.</span>
-    </span>
+  <!-- WORDS -->
+  <div class="words zoomable">
+    <p class="word"></p>
   </div>
 
-  <div class="line">
-    <span class="title">Daily goal:</span>
-    <span class="data" id="dailyGoal">0% / 30 minutes</span>
+  <!-- FULL KEYBOARD -->
+  <div class="keyboard zoomable">
+    <div class="rowkbd">
+      <div class="keykbd tilde">~<br>`</div>
+      <div class="keykbd one">!<br>1</div>
+      <div class="keykbd two">@<br>2</div>
+      <div class="keykbd three">#<br>3</div>
+      <div class="keykbd four">$<br>4</div>
+      <div class="keykbd five">%<br>5</div>
+      <div class="keykbd six">^<br>6</div>
+      <div class="keykbd seven">&<br>7</div>
+      <div class="keykbd eight">*<br>8</div>
+      <div class="keykbd nine">(<br>9</div>
+      <div class="keykbd zero">)<br>0</div>
+      <div class="keykbd underscore">_<br>-</div>
+      <div class="keykbd plus">+<br>=</div>
+      <div class="keykbd wide backspace">Backspace</div>
+    </div>
+    <div class="rowkbd">
+      <div class="keykbd wide tab">Tab</div>
+      <div class="keykbd q">Q</div><div class="keykbd w">W</div><div class="keykbd e">E</div>
+      <div class="keykbd r">R</div><div class="keykbd t">T</div><div class="keykbd y">Y</div>
+      <div class="keykbd u">U</div><div class="keykbd i">I</div><div class="keykbd o">O</div>
+      <div class="keykbd p">P</div>
+      <div class="keykbd bracketleft">{<br>[</div>
+      <div class="keykbd bracketright">}<br>]</div>
+      <div class="keykbd pipe">|<br>\</div>
+    </div>
+    <div class="rowkbd">
+      <div class="keykbd caps">Caps</div>
+      <div class="keykbd a">A</div><div class="keykbd s">S</div><div class="keykbd d">D</div>
+      <div class="keykbd f">F</div><div class="keykbd g">G</div><div class="keykbd h">H</div>
+      <div class="keykbd j">J</div><div class="keykbd k">K</div><div class="keykbd l">L</div>
+      <div class="keykbd semicolon">:<br>;</div>
+      <div class="keykbd quote">"<br>'</div>
+      <div class="keykbd enter">Enter</div>
+    </div>
+    <div class="rowkbd">
+      <div class="keykbd shift">Shift</div>
+      <div class="keykbd z">Z</div><div class="keykbd x">X</div><div class="keykbd c">C</div>
+      <div class="keykbd v">V</div><div class="keykbd b">B</div><div class="keykbd n">N</div>
+      <div class="keykbd m">M</div>
+      <div class="keykbd comma"> < <br> , </div>
+      <div class="keykbd dot"> > <br> . </div>
+      <div class="keykbd slash"> ? <br> / </div>
+      <div class="keykbd rshift">Shift</div>
+    </div>
+    <div class="rowkbd">
+      <div class="keykbd ctrl">Ctrl</div>
+      <div class="keykbd alt">Alt</div>
+      <div class="keykbd space">Space</div>
+      <div class="keykbd alt">Alt</div>
+      <div class="keykbd ctrl">Ctrl</div>
+    </div>
   </div>
-</div>
-
-<div class="words">
-  <p class="word"></p>
-</div>
-
-<!-- ================= KEYBOARD ================= -->
-<div class="keyboard">
-
-<div class="row">
-<div class="key one">~<br>`</div>
-<div class="key one">!<br>1</div>
-<div class="key two">@<br>2</div>
-<div class="key three">#<br>3</div>
-<div class="key four">$<br>4</div>
-<div class="key five">%<br>5</div>
-<div class="key six">^<br>6</div>
-<div class="key seven">&<br>7</div>
-<div class="key eight">*<br>8</div>
-<div class="key nine">(<br>9</div>
-<div class="key zero">)<br>0</div>
-<div class="key minus">_<br>-</div>
-<div class="key equal">+<br>=</div>
-<div class="key wide backspace">Backspace</div>
-</div>
-
-<div class="row">
-<div class="key tab">Tab</div>
-<div class="key q">Q</div><div class="key w">W</div><div class="key e">E</div>
-<div class="key r">R</div><div class="key t">T</div><div class="key y">Y</div>
-<div class="key u">U</div><div class="key i">I</div><div class="key o">O</div>
-<div class="key p">P</div>
-<div class="key bracketleft">{<br>[</div>
-<div class="key bracketright">}<br>]</div>
-<div class="key backslash">|<br>\</div>
-</div>
-
-<div class="row">
-<div class="key caps">Caps</div>
-<div class="key a">A</div><div class="key s">S</div><div class="key d">D</div>
-<div class="key f">F</div><div class="key g">G</div><div class="key h">H</div>
-<div class="key j">J</div><div class="key k">K</div><div class="key l">L</div>
-<div class="key semicolon">:<br>;</div>
-<div class="key quote">"<br>'</div>
-<div class="key enter">Enter</div>
-</div>
-
-<div class="row">
-<div class="key shift">Shift</div>
-<div class="key z">Z</div><div class="key x">X</div><div class="key c">C</div>
-<div class="key v">V</div><div class="key b">B</div><div class="key n">N</div>
-<div class="key m">M</div>
-<div class="key comma"><<br>,</div>
-<div class="key dot">><br>.</div>
-<div class="key slash">?<br>/</div>
-<div class="key rshift">Shift</div>
-</div>
-
-<div class="row">
-<div class="key ctrl">Ctrl</div>
-<div class="key alt">Alt</div>
-<div class="key space">Space</div>
-<div class="key alt">Alt</div>
-<div class="key ctrl">Ctrl</div>
-</div>
-
 </div>
 
 <script>
 
-// ================= KEYBOARD INTERACTION =================
-document.querySelectorAll('.key').forEach(key => {
-  key.addEventListener('mousedown', () => key.classList.add('active'));
-  key.addEventListener('mouseup', () => key.classList.remove('active'));
-  key.addEventListener('mouseleave', () => key.classList.remove('active'));
-});
-
-// ================= WORD SECTION =================
-let position = 0;
-let weakKeys = JSON.parse(localStorage.getItem("weakKeys") || "{}");
-let correct = 0, total = 0, streak = 0;
-let startTime = Date.now();
-let lastWPM = 0, lastAccuracy = 0, lastScore = 0;
-let topSpeed = 0;
-let dailySeconds = 0;
-
-const wordElement = document.querySelector('.word');
-const currentKeyEl = document.getElementById("currentKey");
-
-const wpmEl = document.getElementById("wpm");
-const wpmDeltaEl = document.getElementById("wpmDelta");
-const accuracyEl = document.getElementById("accuracy");
-const accuracyDeltaEl = document.getElementById("accuracyDelta");
-const scoreEl = document.getElementById("score");
-const scoreDeltaEl = document.getElementById("scoreDelta");
-const lastSpeedEl = document.getElementById("lastSpeed");
-const topSpeedEl = document.getElementById("topSpeed");
-const learningRateEl = document.getElementById("learningRate");
-const streaksEl = document.getElementById("streaks");
-const dailyGoalEl = document.getElementById("dailyGoal");
-
-// SERIAL UNLOCK SYSTEM
+// ---------------- KEYS ----------------
+const allKeysContainer = document.getElementById("allKeys");
 const serialOrder = ["E","N","I","A","R","L","T","O","S","U","D","Y","C","G","H","P","M","K","B","W","F","Z","V","X","Q","J"];
 let unlockedLetters = JSON.parse(localStorage.getItem("unlockedLetters") || '["E","N","I","A","R","L"]');
-let nextUnlockIndex = unlockedLetters.length;
 
-function checkPerformanceAndUnlock(accuracy, streak){
-  if(accuracy > 85 && streak >= 10 && nextUnlockIndex < serialOrder.length){
-    unlockedLetters.push(serialOrder[nextUnlockIndex]);
-    localStorage.setItem("unlockedLetters", JSON.stringify(unlockedLetters));
-    nextUnlockIndex++;
-  }
+function renderAllKeys(){
+  allKeysContainer.innerHTML="";
+  serialOrder.forEach(letter=>{
+    const key=document.createElement("div");
+    key.classList.add("key");
+
+    if(unlockedLetters.includes(letter)) key.classList.add("learn");
+    else key.classList.add("lock");
+
+    key.textContent=letter;
+    allKeysContainer.appendChild(key);
+  });
 }
 
-// WORD GENERATOR
+renderAllKeys();
+
+
+// ---------------- METRICS ----------------
+let lastWpm=0;
+let topSpeed=0;
+let score=0;
+let streak=0;
+let prevAccuracy=0;
+
+
+// ---------------- LEARNING RATE DATA ----------------
+let speedHistory=[];
+let accuracyHistory=[];
+
+
+// ---------------- PER KEY WPM ----------------
+let keyStats = JSON.parse(localStorage.getItem("keyStats") || "{}");
+let lastKeyTime = Date.now();
+
+
+// ---------------- WORD ENGINE ----------------
+const wordElement=document.querySelector(".word");
+const currentKeyEl=document.getElementById("currentKey");
+
+let position=0;
+let correct=0;
+let total=0;
+
+let sessionStart=Date.now();
+let startTime=Date.now();
+
+let weakKeys=JSON.parse(localStorage.getItem("weakKeys") || "{}");
+
+const baseWords=[
+"line","earn","tone","rose","user","near","lean","iron","rain","loan",
+"stone","inner","learn","noise","train","enter","liner","tenor","alien"
+];
+
 function generateWord(){
-  const weakKeysData = JSON.parse(localStorage.getItem("weakKeys") || "{}");
-  const letters = unlockedLetters;
 
-  const vowels = letters.filter(c => ["A","E","I","O","U"].includes(c));
-  const consonants = letters.filter(c => !["A","E","I","O","U"].includes(c));
+  let weakList=Object.keys(weakKeys);
 
-  function weightedChoice(charList){
-    const weights = charList.map(c => (weakKeysData[c] || 1));
-    const total = weights.reduce((a,b)=>a+b,0);
-    let r = Math.random()*total;
-    for(let i=0;i<charList.length;i++){
-      if(r < weights[i]) return charList[i];
-      r -= weights[i];
-    }
-    return charList[0];
+  if(weakList.length>0 && Math.random()<0.6){
+
+    let weak=weakList.sort((a,b)=>weakKeys[b]-weakKeys[a])[0];
+
+    let candidates=baseWords.filter(w=>w.includes(weak));
+
+    if(candidates.length>0)
+      return candidates[Math.floor(Math.random()*candidates.length)];
   }
 
-  const patterns = ["CVCVC","VCVCV"];
-  const pattern = patterns[Math.floor(Math.random()*patterns.length)];
-
-  let word = "";
-  for(let p of pattern){
-    if(p === "C") word += weightedChoice(consonants);
-    else word += weightedChoice(vowels);
-  }
-  return word.toLowerCase();
+  return baseWords[Math.floor(Math.random()*baseWords.length)];
 }
 
-// SHOW WORDS
-function showWords(count = 24) {
-  wordElement.innerHTML = "";
-  let wordsArray = JSON.parse(localStorage.getItem("targetWords") || "[]");
+function generateWords(){
 
-  if(wordsArray.length === 0){
-    for (let i = 0; i < count; i++) {
-      wordsArray.push(generateWord());
-    }
-  } else {
-    while(wordsArray.length < count){
-      wordsArray.push(generateWord());
-    }
-    if(wordsArray.length > count){
-      wordsArray = wordsArray.slice(0,count);
-    }
-  }
+  let words=[];
 
-  localStorage.setItem("targetWords", JSON.stringify(wordsArray));
+  for(let i=0;i<5;i++)
+    words.push(generateWord());
 
-  const text = wordsArray.join(" ");
-  text.split("").forEach((letter, i) => {
-    const span = document.createElement("span");
-    span.textContent = letter;
+  return words.join(" ");
+}
+
+function showWords(){
+
+  wordElement.innerHTML="";
+
+  const text=generateWords();
+
+  text.split("").forEach(letter=>{
+    const span=document.createElement("span");
+    span.textContent=letter;
     wordElement.appendChild(span);
   });
-  position = 0;
+
+  position=0;
+
   setCurrentUnderline(position);
-  currentKeyEl.textContent = text[0].toUpperCase();
+  updateCurrentKeyDisplay();
 }
 
-function setCurrentUnderline(pos) {
-  [...wordElement.children].forEach((span, i) => {
+function setCurrentUnderline(pos){
+
+  [...wordElement.children].forEach((span,i)=>{
     span.classList.remove("current");
-    if (i === pos) span.classList.add("current");
+
+    if(i===pos) span.classList.add("current");
   });
+
 }
 
-showWords(10);
+function updateCurrentKeyDisplay(){
 
-// TYPING LOGIC
-document.addEventListener("keydown", (e) => {
-  const currentText = [...wordElement.children].map(span => span.textContent).join("");
+  const currentLetter =
+    wordElement.children[position]?.textContent.toUpperCase() || "-";
 
-  if (e.key.length === 1 && position < currentText.length) {
-    const span = wordElement.children[position];
+  currentKeyEl.textContent = currentLetter;
+
+  allKeysContainer.querySelectorAll(".key").forEach(keyEl=>{
+    keyEl.classList.remove("current");
+
+    if(keyEl.textContent===currentLetter)
+      keyEl.classList.add("current");
+  });
+
+}
+
+
+// ---------------- LEARNING RATE ----------------
+function calculateLearningRate(wpm,accuracy){
+
+  speedHistory.push(wpm);
+  accuracyHistory.push(accuracy);
+
+  if(speedHistory.length>10) speedHistory.shift();
+  if(accuracyHistory.length>10) accuracyHistory.shift();
+
+  let speedGain = speedHistory[speedHistory.length-1] - speedHistory[0];
+
+  let accAvg =
+    accuracyHistory.reduce((a,b)=>a+b,0)/accuracyHistory.length;
+
+  let errors =
+    Object.values(weakKeys).reduce((a,b)=>a+b,0);
+
+  if(speedGain>8 && accAvg>95 && errors<20)
+    return "Fast learner";
+
+  if(speedGain>3 && accAvg>90)
+    return "Normal learner";
+
+  return "Slow learner";
+}
+
+
+// ---------------- PER KEY WPM ----------------
+function recordKeyTiming(key){
+
+  let now=Date.now();
+
+  let diff=now-lastKeyTime;
+
+  lastKeyTime=now;
+
+  if(key.length!==1) return;
+
+  key=key.toLowerCase();
+
+  if(!keyStats[key])
+    keyStats[key]={time:0,count:0};
+
+  keyStats[key].time+=diff;
+  keyStats[key].count++;
+
+  localStorage.setItem("keyStats",JSON.stringify(keyStats));
+
+}
+
+function getKeyWPM(letter){
+
+  let stat=keyStats[letter];
+
+  if(!stat) return 0;
+
+  let avgTime = stat.time/stat.count;
+
+  let cpm = 60000/avgTime;
+
+  return (cpm/5);
+}
+
+// ---------------- METRICS UPDATE ----------------
+function updateMetricsRound(){
+
+  let time=(Date.now()-startTime)/1000/60;
+
+  let wpm=(correct/5)/time || 0;
+
+  let accuracy=(correct/total)*100 || 0;
+
+  let newScore=Math.round(wpm*accuracy/10);
+
+
+  let wpmDelta=wpm-lastWpm;
+  let accDelta=accuracy-prevAccuracy;
+  let scoreDelta=newScore-score;
+
+
+  document.getElementById("wpm").textContent=wpm.toFixed(1)+"wpm";
+  document.getElementById("wpmDelta").textContent=
+  `(${wpmDelta>=0?'↑':'↓'}${Math.abs(wpmDelta).toFixed(1)})`;
+
+
+  document.getElementById("accuracy").textContent=
+    accuracy.toFixed(2)+"%";
+
+  document.getElementById("accuracyDelta").textContent=
+  `(${accDelta>=0?'↑':'↓'}${Math.abs(accDelta).toFixed(2)}%)`;
+
+
+  document.getElementById("score").textContent=newScore;
+
+  document.getElementById("scoreDelta").textContent=
+  `(${scoreDelta>=0?'↑':'↓'}${Math.abs(scoreDelta)})`;
+
+
+  document.getElementById("lastSpeed").textContent=
+    wpm.toFixed(1)+"wpm";
+
+
+  if(wpm>topSpeed)
+    topSpeed=wpm;
+
+  document.getElementById("topSpeed").textContent=
+    topSpeed.toFixed(1)+"wpm";
+
+
+  let rate=calculateLearningRate(wpm,accuracy);
+
+  document.getElementById("learningRate").textContent=rate;
+
+
+  lastWpm=wpm;
+  prevAccuracy=accuracy;
+  score=newScore;
+
+}
+
+
+// ---------------- TYPING ENGINE ----------------
+document.addEventListener("keydown",(e)=>{
+
+  recordKeyTiming(e.key);
+
+  const currentText=
+    [...wordElement.children].map(s=>s.textContent).join("");
+
+  if(e.key.length===1 && position<currentText.length){
+
+    const span=wordElement.children[position];
+
     total++;
 
-    if (e.key.toLowerCase() === currentText[position]) {
-      if (!span.classList.contains("incorrect")) {
-        span.classList.add("correct");
-        correct++;
-        streak++;
-      }
+    if(e.key.toLowerCase()===currentText[position]){
+
+      span.classList.add("correct");
+
+      correct++;
+      streak++;
       position++;
-      setCurrentUnderline(position);
-    } else {
-      span.classList.remove("correct");
-      span.classList.add("incorrect");
-      streak = 0;
 
-      weakKeys[currentText[position]] = (weakKeys[currentText[position]] || 0) + 1;
-      localStorage.setItem("weakKeys", JSON.stringify(weakKeys));
-
-      setCurrentUnderline(position);
-      return;
     }
+
+    else{
+
+      span.classList.add("incorrect");
+
+      streak=0;
+
+      let wrong=currentText[position];
+
+      weakKeys[wrong]=(weakKeys[wrong]||0)+1;
+
+      localStorage.setItem("weakKeys",JSON.stringify(weakKeys));
+
+    }
+
+    setCurrentUnderline(position);
+    updateCurrentKeyDisplay();
   }
 
-  if (position === currentText.length) {
-    finishRound(currentText);
-    showWords(10);
+  if(position===currentText.length){
+
+    updateMetricsRound();
+
+    showWords();
+
+    correct=0;
+    total=0;
+    startTime=Date.now();
   }
 
-  highlightKey(e.key);
 });
 
-// FINISH ROUND
-function finishRound(currentWord){
-  const elapsedMinutes = (Date.now() - startTime)/60000;
-  const wpm = (correct/5)/elapsedMinutes;
-  const accuracy = (correct/total)*100;
-  const score = correct*10 + streak*2;
 
-  const wpmDelta = (wpm - lastWPM).toFixed(1);
-  const accuracyDelta = (accuracy - lastAccuracy).toFixed(2);
-  const scoreDelta = (score - lastScore);
+// ---------------- START ----------------
+showWords();
 
-  wpmEl.innerText = wpm.toFixed(1);
-  wpmDeltaEl.innerText = wpmDelta > 0 ? "↑+"+wpmDelta : "↓"+wpmDelta;
-
-  accuracyEl.innerText = accuracy.toFixed(2);
-  accuracyDeltaEl.innerText = accuracyDelta > 0 ? "↑+"+accuracyDelta : "↓"+accuracyDelta;
-
-  scoreEl.innerText = score;
-  scoreDeltaEl.innerText = scoreDelta > 0 ? "↑+"+scoreDelta : "↓"+scoreDelta;
-
-  currentKeyEl.innerText = (currentWord[position-1] || "-").toUpperCase();
-
-  lastSpeedEl.innerText = wpm.toFixed(1)+"wpm";
-  if(wpm > topSpeed){
-    topSpeed = wpm;
-  }
-  topSpeedEl.innerText = topSpeed.toFixed(1)+"wpm";
-
-  learningRateEl.innerText = "Uncertain";
-  streaksEl.innerText = streak > 0 ? "Streak: "+streak : "No accuracy streaks.";
-
-  dailySeconds += (Date.now() - startTime)/1000;
-  const percent = Math.min((dailySeconds/1800)*100,100);
-  dailyGoalEl.innerText = Math.floor(percent)+"% / 30 minutes";
-
-  lastWPM = wpm;
-  lastAccuracy = accuracy;
-  lastScore = score;
-
-  correct = 0;
-  total = 0;
-  streak = 0;
-  startTime = Date.now();
-
-  checkPerformanceAndUnlock(lastAccuracy, streak);
-}
-
-// KEYBOARD HIGHLIGHT
-function highlightKey(k){
-  k = k.toLowerCase();
-  const keyEl = document.querySelector(".key."+k);
-  if(keyEl){
-    keyEl.classList.add("active");
-    setTimeout(()=>keyEl.classList.remove("active"),200);
-  }
-}
-
+// ------------------- ZOOM & DRAG -------------------
+document.querySelectorAll(".zoomable").forEach(section=>{
+  let scale=1, isDown=false, startX, startY, offsetX=0, offsetY=0;
+  section.addEventListener("wheel", e=>{
+    e.preventDefault();
+    if(e.deltaY<0) scale +=0.05; else scale -=0.05;
+    scale=Math.max(0.5,Math.min(scale,2));
+    section.style.transform=`translate(${offsetX}px,${offsetY}px) scale(${scale})`;
+  });
+  section.addEventListener("mousedown", e=>{
+    isDown=true; startX=e.clientX-offsetX; startY=e.clientY-offsetY;
+    section.style.cursor="grabbing";
+  });
+  window.addEventListener("mouseup", e=>{ isDown=false; section.style.cursor="grab"; });
+  window.addEventListener("mousemove", e=>{
+    if(!isDown) return;
+    offsetX=e.clientX-startX; offsetY=e.clientY-startY;
+    section.style.transform=`translate(${offsetX}px,${offsetY}px) scale(${scale})`;
+  });
+});
 </script>
 
 </body>
